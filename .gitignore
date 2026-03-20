@@ -1,0 +1,15 @@
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Data files (PDFs can be large)
+data/pdfs/
+
+# Editor
+.vscode/
+.idea/

@@ -1,0 +1,22 @@
+# Web framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.35
+pgvector==0.3.2
+
+# PDF parsing
+pypdf2==3.0.1
+
+# AI / embeddings
+openai==1.51.0
+langchain==0.3.1
+langchain-text-splitters==0.3.0
+
+# Utilities
+python-dotenv==1.0.1
+httpx==0.27.2
+tqdm==4.66.5
+ 
