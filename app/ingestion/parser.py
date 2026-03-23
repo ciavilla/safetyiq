@@ -8,6 +8,8 @@ page is a dict with the page number and its text content.
 
 import PyPDF2
 from pathlib import Path
+import httpx
+from bs4 import BeautifulSoup
 
 
 def parse_pdf(pdf_path: str) -> list[dict]:
@@ -49,3 +51,37 @@ def parse_pdf(pdf_path: str) -> list[dict]:
 
     print(f"   ✅ Extracted text from {len(pages)} pages")
     return pages
+
+def parse_html_url(url: str) -> list[dict]:
+    """
+    Fetches an HTML page from a URL and extracts clean text.
+    Returns the same format as parse_pdf() so the rest of
+    the pipeline works identically.
+    """
+    print(f"   🌐 Fetching HTML page...")
+    response = httpx.get(url, follow_redirects=True, timeout=30)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Remove nav, footer, scripts, styles — we only want content
+    for tag in soup(["nav", "footer", "script", "style", "header"]):
+        tag.decompose()
+
+    # Try to find the main content area first
+    main = soup.find("main") or soup.find("article") or soup.find("div", {"id": "main-content"}) or soup.body
+
+    text = main.get_text(separator="\n", strip=True) if main else soup.get_text(separator="\n", strip=True)
+
+    # Clean up excessive blank lines
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    clean_text = "\n".join(lines)
+
+    if not clean_text:
+        print(f"   ❌ No text extracted from HTML")
+        return []
+
+    print(f"   ✅ Extracted text from HTML page")
+
+    # Return as a single "page" so it fits the same format as PDF output
+    return [{"page_number": 1, "text": clean_text}]
