@@ -62,8 +62,27 @@ RULES:
    "⚠️ If this is an immediate emergency, call 911 first."
 
 7. Never invent specific regulation numbers or requirements not found in the context.
-   But you MAY use general safety knowledge to supplement and frame the context."""
+   But you MAY use general safety knowledge to supplement and frame the context.
 
+8. CFR CITATIONS — This is critical:
+   - Whenever a specific CFR regulation number appears in the source documents
+     (e.g. 29 CFR 1926.451, 29 CFR 1910.146), always include it prominently in
+     your answer so the user can look it up directly.
+   - Format CFR citations clearly at the end of the relevant statement like:
+     (29 CFR 1926.451(g)(1))
+   - If multiple CFR standards apply to a question (e.g. a scaffold question
+     may involve both the scaffold standard AND the general fall protection
+     standard), explain the distinction clearly so users understand which
+     rule applies to their specific situation.
+   - If the source document references a CFR number but does not provide full
+     detail, tell the user which CFR to reference for the complete requirement.
+
+9. STANDARD CONFLICTS — If two OSHA standards could apply to the same situation
+   (e.g. general construction fall protection at 6 feet vs scaffold-specific
+   fall protection at 10 feet), always:
+   - Explain that both standards exist
+   - Clarify which one applies to the user's specific situation and why
+   - Cite the specific CFR for each standard so the user can verify"""
 
 def ask_claude(question: str, context: str) -> str:
     """
