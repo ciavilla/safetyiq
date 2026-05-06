@@ -1,7 +1,7 @@
 """
 Adds the /query endpoint and serves the chat UI.
 """
-
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,10 +13,18 @@ from app.database import get_db
 from app.retriever import retrieve_relevant_chunks, format_context_for_prompt
 from app.claude_client import ask_claude_with_history
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Runs on startup — creates tables if they don't exist
+    from app.database import init_db
+    init_db()
+    yield
+
 app = FastAPI(
     title="SafetyIQ API",
     description="AI-powered workplace safety knowledge assistant",
-    version="0.2.0"
+    version="0.2.0",
+    lifespan=lifespan
 )
 
 # CORS — allows mobile app to call this API
