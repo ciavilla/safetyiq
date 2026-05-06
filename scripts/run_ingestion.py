@@ -1138,10 +1138,7 @@ OSHA_HTML_PAGES = [
         "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1442",
         "1926.1442 - Railroad roadway maintenance machines."
     ),
-    (
-        "",
-        ""
-    ),
+    
     # add more as needed
 ]
 PDF_DIR = Path(__file__).parent.parent / "data" / "pdfs"
