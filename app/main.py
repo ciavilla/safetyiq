@@ -4,6 +4,7 @@ Adds the /query endpoint and serves the chat UI.
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -16,6 +17,15 @@ app = FastAPI(
     title="SafetyIQ API",
     description="AI-powered workplace safety knowledge assistant",
     version="0.2.0"
+)
+
+# CORS — allows mobile app to call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # We'll lock this down later once we have our app's URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Serve the chat UI from the static folder
