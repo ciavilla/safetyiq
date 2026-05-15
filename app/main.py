@@ -2,7 +2,10 @@
 Adds the /query endpoint and serves the chat UI.
 """
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -12,6 +15,9 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.retriever import retrieve_relevant_chunks, format_context_for_prompt
 from app.claude_client import ask_claude_with_history
+
+# Rate limiter — identifies users by IP address
+limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +32,8 @@ app = FastAPI(
     version="0.2.0",
     lifespan=lifespan
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — allows mobile app to call this API
 app.add_middleware(
@@ -113,7 +121,8 @@ def list_documents(db: Session = Depends(get_db)):
 
 
 @app.post("/query", response_model=QueryResponse)
-def query(request: QueryRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def query(request: Request, query_request: QueryRequest, db: Session = Depends(get_db)):
     """
     The main endpoint — takes a safety question and returns an AI answer with citations.
 
@@ -124,12 +133,12 @@ def query(request: QueryRequest, db: Session = Depends(get_db)):
     4. Return the answer + the source chunks
     """
 
-    if not request.question.strip():
+    if not query_request.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty")
 
     # Step 1: Retrieve relevant chunks via vector similarity search
     chunks = retrieve_relevant_chunks(
-        question=request.question,
+        question=query_request.question,
         db=db,
         top_k=8
     )
@@ -144,11 +153,11 @@ def query(request: QueryRequest, db: Session = Depends(get_db)):
     context = format_context_for_prompt(chunks)
 
     # Step 3: Convert history to the format Claude expects
-    history = [{"role": m.role, "content": m.content} for m in request.history]
+    history = [{"role": m.role, "content": m.content} for m in query_request.history]
 
     # Step 4: Ask Claude
     answer = ask_claude_with_history(
-        question=request.question,
+        question=query_request.question,
         context=context,
         history=history
     )
